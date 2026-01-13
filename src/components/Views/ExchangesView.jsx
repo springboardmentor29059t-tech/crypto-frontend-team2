@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Icon from '../UI/Icon';
+// Import the API functions
+import { connectExchange, getUserExchanges, deleteExchange } from '../../api/exchange';
 
-// Helper to get styling based on exchange name
+// Helper to get styling based on exchange name (Keep your existing function)
 const getExchangeDetails = (name) => {
   const lowerName = name.toLowerCase();
   
@@ -33,7 +35,6 @@ const getExchangeDetails = (name) => {
     };
   }
   
-  // Default for generic exchanges
   return {
     color: 'gray',
     icon: 'E',
@@ -44,51 +45,97 @@ const getExchangeDetails = (name) => {
 };
 
 const ExchangesView = ({ showToast, onNotify }) => {
-  // Initial Dummy Data
-  const [exchanges, setExchanges] = useState([
-    { 
-      id: 1, 
-      name: 'Binance', 
-      accountLabel: 'Main Account', 
-      lastSync: '2 mins ago',
-      status: 'Active',
-      keyPreview: 'A1b2...xY9z' 
-    }
-  ]);
+  // State for loading and data
+  const [exchanges, setExchanges] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleConnect = (e) => {
+  // 1. Fetch Exchanges on component mount
+  useEffect(() => {
+    fetchExchanges();
+  }, []);
+
+  const fetchExchanges = async () => {
+    try {
+      setLoading(true);
+      const response = await getUserExchanges();
+      // Map backend response to frontend component structure
+      // Backend: { id, exchange, label, apiKey, addedAt }
+      // Frontend: { id, name, accountLabel, lastSync, status, keyPreview }
+      const mappedData = response.data.map(key => ({
+        id: key.id,
+        name: key.exchange, // Backend sends exchange name in 'exchange' field
+        accountLabel: key.label || 'No Label',
+        lastSync: new Date(key.addedAt).toLocaleString(), // Simple date formatting
+        status: 'Active', // Default status
+        keyPreview: key.apiKey // Backend returns masked key
+      }));
+      setExchanges(mappedData);
+    } catch (error) {
+      console.error("Failed to fetch exchanges", error);
+      if(error.response && error.response.status === 401) {
+          showToast("Session expired. Please login again.");
+      } else {
+          showToast("Failed to load exchanges.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConnect = async (e) => {
     e.preventDefault();
     const form = e.target;
     const exchangeName = form.exchange.value;
-    
-    // Create new connection object
-    const newExchange = {
-      id: Date.now(),
-      name: exchangeName,
-      accountLabel: `API Key (${form.apiKey.value.substring(0, 4)}...)`,
-      lastSync: 'Just now',
-      status: 'Active',
-      keyPreview: `${form.apiKey.value.substring(0, 4)}...${Math.random().toString(36).substring(2, 6)}`
-    };
+    const apiKey = form.apiKey.value;
+    const apiSecret = form.apiSecret.value;
 
-    // Update State
-   
-    setExchanges([...exchanges, newExchange]);
-    showToast(`Successfully connected to ${exchangeName}`);
-    form.reset();
+    // Generate a default label since the form doesn't have one
+    const label = `${exchangeName} Account`;
 
-    // TRIGGER NOTIFICATION
-    if (onNotify) {
-        onNotify('success', 'Exchange Connected', `${exchangeName} has been linked successfully.`);
+    try {
+        // 2. Call Backend API
+        await connectExchange({
+            exchangeName: exchangeName,
+            apiKey: apiKey,
+            apiSecret: apiSecret,
+            label: label
+        });
+
+        showToast(`Successfully connected to ${exchangeName}`);
+        form.reset();
+        
+        // TRIGGER NOTIFICATION
+        if (onNotify) {
+            onNotify('success', 'Exchange Connected', `${exchangeName} has been linked successfully.`);
+        }
+
+        // Refresh the list
+        fetchExchanges();
+
+    } catch (error) {
+        console.error(error);
+        const errorMsg = error.response?.data || "Failed to connect exchange";
+        showToast(errorMsg);
     }
   };
-    // UI Feedback
-    
 
-  const handleRemove = (id, name) => {
+  const handleRemove = async (id, name) => {
     if (window.confirm(`Are you sure you want to remove the connection to ${name}?`)) {
-      setExchanges(exchanges.filter(ex => ex.id !== id));
-      showToast(`Removed ${name} connection`);
+        try {
+            // 3. Call Backend API to delete
+            await deleteExchange(id);
+            showToast(`Removed ${name} connection`);
+            
+            // Update local state immediately (optimistic update) or fetch again
+            fetchExchanges();
+            
+            if (onNotify) {
+                onNotify('info', 'Connection Removed', `${name} has been disconnected.`);
+            }
+        } catch (error) {
+            console.error(error);
+            showToast("Failed to remove exchange");
+        }
     }
   };
 
@@ -148,8 +195,8 @@ const ExchangesView = ({ showToast, onNotify }) => {
                         </div>
                     </div>
 
-                    <button type="submit" className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg font-bold text-white hover:shadow-lg hover:shadow-cyan-500/20 transition-all">
-                        Connect Securely
+                    <button type="submit" disabled={loading} className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg font-bold text-white hover:shadow-lg hover:shadow-cyan-500/20 transition-all disabled:opacity-50">
+                        {loading ? 'Connecting...' : 'Connect Securely'}
                     </button>
                 </form>
             </div>
@@ -159,7 +206,9 @@ const ExchangesView = ({ showToast, onNotify }) => {
         <div className="lg:col-span-2">
             <h4 className="text-lg font-bold text-white mb-4">Active Connections ({exchanges.length})</h4>
             
-            {exchanges.length === 0 ? (
+            {loading && exchanges.length === 0 ? (
+                 <div className="text-center text-gray-500 py-10">Loading exchanges...</div>
+            ) : exchanges.length === 0 ? (
                 <div className="border-2 border-dashed border-gray-800 rounded-xl p-8 text-center text-gray-500">
                     <Icon name="plugs" size={32} className="mb-2 mx-auto opacity-50" />
                     <p>No exchanges connected yet.</p>

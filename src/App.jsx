@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from './components/Layout/DashboardLayout';
 import Modal from './components/Layout/Modal';
 import LandingPage from './components/Views/LandingPage';
@@ -13,77 +13,102 @@ import AssetDetailView from './components/Views/AssetDetailView';
 import { INITIAL_PORTFOLIO, TRADES_DATA } from './data/constants';
 import Icon from './components/UI/Icon';
 
+// Import the API functions
+import { loginUser, registerUser } from './api/auth'; 
+
 function App() {
   const [view, setView] = useState('landing'); 
   const [user, setUser] = useState(null); 
   const [portfolio, setPortfolio] = useState(INITIAL_PORTFOLIO);
-  const [authMode, setAuthMode] = useState('login'); // 'login' or 'signup'
+  const [authMode, setAuthMode] = useState('login');
+  const [authError, setAuthError] = useState(null);
   
-  // Modal State
   const [modalOpen, setModalOpen] = useState(null); 
   const [selectedAsset, setSelectedAsset] = useState(null); 
   const [toast, setToast] = useState(null);
   
-  // Notification State
   const [notifications, setNotifications] = useState([
     { id: 1, type: 'info', title: 'Welcome to CryptoTrack', msg: 'Start connecting your exchanges to track assets.', time: 'Just now', isRead: false }
   ]);
 
-  // --- NOTIFICATION HELPERS ---
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const savedUser = localStorage.getItem("user");
+    if (token && savedUser) {
+      setUser(JSON.parse(savedUser));
+      setView('dashboard');
+    }
+  }, []);
+
   const addNotification = (type, title, msg) => {
-    const newNotif = {
-      id: Date.now(),
-      type: type || 'info',
-      title: title,
-      msg: msg,
-      time: 'Just now',
-      isRead: false
-    };
+    const newNotif = { id: Date.now(), type, title, msg, time: 'Just now', isRead: false };
     setNotifications(prev => [newNotif, ...prev]);
   };
-
-  const clearNotifications = () => {
-    setNotifications([]);
-  };
+  const clearNotifications = () => setNotifications([]);
   
-  // --- AUTH HANDLERS ---
-  const handleLogin = (email) => {
-    const namePart = email.split('@')[0] || "Crypto User";
-    const displayName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
-    const initials = namePart.substring(0,2).toUpperCase();
-    
-    setUser({ name: displayName, initials });
-    setView('dashboard');
-    addNotification('success', 'Login Successful', `Welcome back, ${displayName}!`);
+  const handleLogin = async (email, password) => {
+    setAuthError(null); // Clear previous errors
+    try {
+      // Call the API function
+      const data = await loginUser(email, password);
+      
+      // Handle success data here
+      const token = data.token;
+      
+      const namePart = email.split('@')[0] || "Crypto User";
+      const displayName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+      const initials = namePart.substring(0,2).toUpperCase();
+      const newUserObj = { name: displayName, initials, email };
+
+      setUser(newUserObj);
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(newUserObj));
+
+      setView('dashboard');
+      addNotification('success', 'Login Successful', `Welcome back, ${displayName}!`);
+      
+    } catch (error) {
+      // Handle error from API here
+      setAuthError(error.message);
+      showToast(error.message);
+    }
   };
 
-  const handleSignup = () => {
-    // In a real app, you would save user to database here.
-    showToast('Account created successfully! Please log in.');
-    setAuthMode('login'); // Force mode to login
-    setView('auth');     // Ensure we are on auth page
-    addNotification('info', 'Account Created', 'You can now log in with your credentials.');
+  const handleSignup = async (name, email, password) => {
+    setAuthError(null);
+    try {
+      // Call the API function
+      const data = await registerUser(name, email, password);
+      
+      showToast('Account created successfully! Please log in.');
+      setAuthMode('login'); 
+      setView('auth');     
+      addNotification('info', 'Account Created', 'You can now log in with your credentials.');
+    } catch (error) {
+      setAuthError(error.message);
+      showToast(error.message);
+    }
   };
 
   const handleLogout = () => {
     setUser(null);
     setView('landing');
     setModalOpen(null);
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
   };
 
-  // --- PORTFOLIO HANDLERS ---
   const handleAddHolding = (e) => {
     e.preventDefault();
     const form = e.target;
     const symbol = form.symbol.value.toUpperCase();
-    
     const newAsset = {
         id: Date.now(),
         symbol: symbol,
         name: form.name.value,
         qty: parseFloat(form.qty.value),
         avgCost: parseFloat(form.avgCost.value),
-        currentPrice: parseFloat(form.avgCost.value), // Initial P&L is 0
+        currentPrice: parseFloat(form.avgCost.value),
         icon: symbol[0],
         gradient: 'from-gray-600 to-gray-500'
     };
@@ -107,18 +132,16 @@ function App() {
     showToast('Holding updated!');
   };
 
-  // --- TOAST HELPER ---
   const showToast = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
   };
 
-  // --- ROUTING & RENDER ---
   if (view === 'landing') {
     return (
         <LandingPage 
-          onLogin={() => { setAuthMode('login'); setView('auth'); }} 
-          onSignup={() => { setAuthMode('signup'); setView('auth'); }} 
+          onLogin={() => { setAuthMode('login'); setView('auth'); setAuthError(null); }} 
+          onSignup={() => { setAuthMode('signup'); setView('auth'); setAuthError(null); }} 
         />
     );
   }
@@ -127,6 +150,8 @@ function App() {
     return (
         <AuthPage 
           mode={authMode} 
+          error={authError}
+          onClearError={() => setAuthError(null)}
           onLogin={handleLogin}
           onSignup={handleSignup}
           onBack={() => setView('landing')} 
@@ -157,15 +182,8 @@ function App() {
         />
       )}
       
-      {view === 'exchanges' && (
-        <ExchangesView 
-            showToast={showToast} 
-            onNotify={addNotification} 
-        />
-      )}
-      
+      {view === 'exchanges' && <ExchangesView showToast={showToast} onNotify={addNotification} />}
       {view === 'trades' && <TradesView />}
-      
       {view === 'risk' && <RiskView portfolio={portfolio} showToast={showToast} />}
       
       {view === 'reports' && (
@@ -230,7 +248,6 @@ function App() {
           <Icon name="check-circle" /><span>{toast}</span>
         </div>
       )}
-
     </DashboardLayout>
   );
 }

@@ -1,27 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import Icon from '../UI/Icon';
 
-// Accept onLogin and onSignup separately
-const AuthPage = ({ onLogin, onSignup, onBack, mode = 'login' }) => {
+// Added 'error' and 'onClearError' to props
+const AuthPage = ({ onLogin, onSignup, onBack, mode = 'login', error, onClearError }) => {
   const [isLogin, setIsLogin] = useState(mode === 'login');
-  const [email, setEmail] = useState('');
+  
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: ''
+  });
 
-  // Sync internal state if parent 'mode' changes
   useEffect(() => {
     setIsLogin(mode === 'login');
   }, [mode]);
+
+  const handleChange = (e) => {
+    // Clear error when user starts typing
+    if (error) onClearError();
+    
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     
     if (isLogin) {
-      // User clicked "Log In" button -> Call Login Handler
-      const namePart = email.split('@')[0] || "Crypto User";
-      const displayName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
-      onLogin(displayName);
+      onLogin(formData.email, formData.password);
     } else {
-      // User clicked "Sign Up" button -> Call Signup Handler
-      onSignup();
+      onSignup(formData.name, formData.email, formData.password);
     }
   };
 
@@ -44,12 +51,26 @@ const AuthPage = ({ onLogin, onSignup, onBack, mode = 'login' }) => {
           </p>
         </div>
 
+        {/* Error Display Box */}
+        {error && (
+            <div className="mb-4 bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded-lg text-sm text-center font-medium">
+                {error}
+            </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Full Name field only shows for Signup */}
           {!isLogin && (
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1.5">Full Name</label>
-              <input type="text" className="w-full px-4 py-3 bg-gray-950 border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none text-white" placeholder="John Doe" />
+              <input 
+                type="text" 
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 bg-gray-950 border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none text-white" 
+                placeholder="John Doe" 
+              />
             </div>
           )}
           
@@ -57,9 +78,10 @@ const AuthPage = ({ onLogin, onSignup, onBack, mode = 'login' }) => {
             <label className="block text-sm font-medium text-gray-300 mb-1.5">Email Address</label>
             <input 
               type="email" 
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
               required 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 bg-gray-950 border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none text-white" 
               placeholder="you@example.com" 
             />
@@ -67,7 +89,15 @@ const AuthPage = ({ onLogin, onSignup, onBack, mode = 'login' }) => {
           
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1.5">Password</label>
-            <input type="password" required className="w-full px-4 py-3 bg-gray-950 border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none text-white" placeholder="••••••••" />
+            <input 
+              type="password" 
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              required 
+              className="w-full px-4 py-3 bg-gray-950 border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none text-white" 
+              placeholder="••••••••" 
+            />
           </div>
           
           <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg font-bold text-white shadow-lg hover:shadow-cyan-500/25 transform transition-all">
