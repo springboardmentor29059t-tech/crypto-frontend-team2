@@ -1,0 +1,49 @@
+{
+    "holdings_list":[
+  {
+    "symbol": "BTC",
+    "name": "Bitcoin",
+    "amount": 1.2453,
+    "value": 52341.23,
+    "price": 42024.56,
+    "change": 3.24,
+    "color": "#F7931A"
+  },
+  {
+    "symbol": "ETH",
+    "name": "Ethereum",
+    "amount": 12.5,
+    "value": 28750.0,
+    "price": 2300.0,
+    "change": 1.87,
+    "color": "#627EEA"
+  },
+  {
+    "symbol": "SOL",
+    "name": "Solana",
+    "amount": 145.23,
+    "value": 14523.0,
+    "price": 100.0,
+    "change": -2.15,
+    "color": "#00FFA3"
+  },
+  {
+    "symbol": "BNB",
+    "name": "Binance Coin",
+    "amount": 24.5,
+    "value": 7473.5,
+    "price": 305.04,
+    "change": 0.95,
+    "color": "#F3BA2F"
+  },
+  {
+    "symbol": "AVAX",
+    "name": "Avalanche",
+    "amount": 320.0,
+    "value": 11200.0,
+    "price": 35.0,
+    "change": -1.23,
+    "color": "#E84142"
+  }
+]
+}

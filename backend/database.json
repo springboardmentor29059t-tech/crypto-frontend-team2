@@ -1,0 +1,37 @@
+{
+  "users": [
+    {
+      "id": "a29706ff-2276-48d2-aa90-19b9eddb1137",
+      "name": "jojo",
+      "email": "jojo@gmail.com",
+      "passwordHash": "$2a$10$DgXFdO7/eh0IaH/gsOFnau2sRqbbfuV1kUF4lxeB9dozuZj/Cbb9q",
+      "createdAt": "2025-12-15T15:37:18.086Z"
+    }
+  ],
+  "revokedTokens": [
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhMjk3MDZmZi0yMjc2LTQ4ZDItYWE5MC0xOWI5ZWRkYjExMzciLCJpYXQiOjE3NjU4MTMwMzgsImV4cCI6MTc2NjQxNzgzOH0.73nlDAnmMYVtYD-xP7DjoCojs7xy0hJI3ARJJb5c8L0",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhMjk3MDZmZi0yMjc2LTQ4ZDItYWE5MC0xOWI5ZWRkYjExMzciLCJpYXQiOjE3NjU4MTMwODAsImV4cCI6MTc2NjQxNzg4MH0.Vwf3C2Dz8gCMr1Swz60hLJW1KYJxcsx7HMsR7xamR58",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhMjk3MDZmZi0yMjc2LTQ4ZDItYWE5MC0xOWI5ZWRkYjExMzciLCJpYXQiOjE3NjY4MjIwMjksImV4cCI6MTc2NzQyNjgyOX0.CUWgMZooSFSsfF0izh1k6KrVszkFCC9t78AQbVbDamg",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhMjk3MDZmZi0yMjc2LTQ4ZDItYWE5MC0xOWI5ZWRkYjExMzciLCJpYXQiOjE3Njc0NjI5NTUsImV4cCI6MTc2ODA2Nzc1NX0.inAjBJiKrVqPo5NVLHjFq44AY_dLDYnnN7UOAmTAsXI",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhMjk3MDZmZi0yMjc2LTQ4ZDItYWE5MC0xOWI5ZWRkYjExMzciLCJpYXQiOjE3Njc0NjQ2NjAsImV4cCI6MTc2ODA2OTQ2MH0.0fc5nPUc_p6488PDClBkyNmsJsBq655WV3BGa8D07ms"
+  ],
+  "settings": {
+    "a29706ff-2276-48d2-aa90-19b9eddb1137": {
+      "profile": {
+        "name": "John Doe",
+        "email": "john@example.com",
+        "phone": "",
+        "timezone": "UTC"
+      },
+      "notifications": {
+        "email": true,
+        "push": true,
+        "priceAlerts": true,
+        "riskAlerts": true
+      },
+      "appearance": {
+        "darkMode": true
+      }
+    }
+  }
+}
