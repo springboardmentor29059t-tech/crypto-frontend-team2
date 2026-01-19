@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 const DashboardView = ({ portfolio }) => {
   const stats = useMemo(() => {
@@ -10,8 +11,38 @@ const DashboardView = ({ portfolio }) => {
     return { totalVal, pl, plPercent };
   }, [portfolio]);
 
+  // Prepare data for the Pie Chart
+  const pieData = useMemo(() => {
+    // Ensure we don't divide by zero if portfolio is empty
+    if (!portfolio || portfolio.length === 0) return [];
+    
+    return portfolio.map((asset) => ({
+      name: asset.name || asset.symbol || 'Unknown', // Use asset name or symbol
+      value: asset.qty * asset.currentPrice,
+    })).filter(item => item.value > 0); // Filter out assets with 0 value
+  }, [portfolio]);
+
+  // Neon color palette for the chart segments
+  const COLORS = ['#06b6d4', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6'];
+
+  // Custom Tooltip style to match dark theme
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-gray-800 border border-gray-700 p-3 rounded-lg shadow-lg text-sm">
+          <p className="text-gray-300 font-medium">{payload[0].name}</p>
+          <p className="text-white font-bold">
+            ${payload[0].value.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="fade-in">
+      {/* Top Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-gray-900/50 neon-border rounded-xl p-6 hover:shadow-lg hover:shadow-cyan-500/10 transition-all">
           <div className="text-gray-400 text-sm mb-2">Total Portfolio Value</div>
@@ -39,23 +70,40 @@ const DashboardView = ({ portfolio }) => {
         </div>
       </div>
 
+      {/* Portfolio Allocation (Pie Chart) */}
       <div className="bg-gray-900/50 neon-border rounded-xl p-6">
-        <h3 className="text-lg font-semibold mb-4">Portfolio Performance (7D)</h3>
-        <svg className="w-full" viewBox="0 0 800 200" style={{height: '200px'}}>
-          <defs>
-            <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" style={{stopColor:'#06b6d4', stopOpacity:1}} />
-              <stop offset="100%" style={{stopColor:'#8b5cf6', stopOpacity:1}} />
-            </linearGradient>
-          </defs> 
-          <polyline 
-            className="chart-line" 
-            fill="none" 
-            stroke="url(#lineGradient)" 
-            strokeWidth="3" 
-            points="0,160 100,140 200,130 300,110 400,100 500,120 600,90 700,70 800,50" 
-          />
-        </svg>
+        <h3 className="text-lg font-semibold mb-4">Portfolio Allocation</h3>
+        <div style={{ width: '100%', height: 350 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={pieData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                outerRadius={100}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {pieData.map((entry, index) => (
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={COLORS[index % COLORS.length]} 
+                    stroke="none" // Removes border between slices for cleaner look
+                  />
+                ))}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+              <Legend 
+                verticalAlign="bottom" 
+                height={36}
+                iconType="circle"
+                wrapperStyle={{ color: '#9ca3af' }} // Tailwind gray-400
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );

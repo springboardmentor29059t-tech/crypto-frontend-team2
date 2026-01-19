@@ -7,6 +7,7 @@ const DashboardLayout = ({ user, children, activeView, setActiveView, onLogout, 
 
   const navItems = [
     { id: 'dashboard', icon: 'house', label: 'Dashboard' },
+    { id: 'market', icon: 'chart-line', label: 'Market' }, 
     { id: 'portfolio', icon: 'wallet', label: 'Portfolio' },
     { id: 'exchanges', icon: 'lightning', label: 'Exchanges' },
     { id: 'trades', icon: 'arrows-left-right', label: 'Trades' },
@@ -71,7 +72,7 @@ const DashboardLayout = ({ user, children, activeView, setActiveView, onLogout, 
       {/* Sidebar */}
       <aside className="fixed left-0 top-0 h-full w-64 bg-gray-900 border-r border-gray-800 z-40 hidden md:flex flex-col">
         <div className="p-6 border-b border-gray-800">
-          <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-600">BlockfolioX</h1>
+          <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-600">CryptoTrack <span className="text-cyan-400">Pro</span></h1>
           <p className="text-xs text-gray-400 mt-1">Advanced Crypto Portfolio Management</p>
         </div>
         <nav className="p-4 space-y-2 flex-1">
