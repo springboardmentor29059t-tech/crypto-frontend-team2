@@ -1,0 +1,23 @@
+﻿[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------< com.portfolio:crypto-backend >--------------------
+[INFO] Building crypto-backend 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.4.0:clean (default-clean) @ crypto-backend ---
+[INFO] Deleting C:\Users\aksha\OneDrive\Desktop\Crypto_Portfolio\Crypto_Backend\target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ crypto-backend ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ crypto-backend ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 21 source files with javac [debug parameters release 17] to target\classes
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  4.380 s
+[INFO] Finished at: 2026-01-01T22:28:48+05:30
+[INFO] ------------------------------------------------------------------------
