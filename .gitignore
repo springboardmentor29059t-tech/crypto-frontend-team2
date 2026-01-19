@@ -22,3 +22,15 @@ Crypto_Backend/target/
 # Frontend build artifacts
 Crypto_Frontend/node_modules/
 Crypto_Frontend/dist/
+
+# Backend
+Crypto_Backend/target/
+
+# Frontend
+Crypto_Frontend/node_modules/
+Crypto_Frontend/dist/
+
+# General
+node_modules/
+dist/
+.vs/
