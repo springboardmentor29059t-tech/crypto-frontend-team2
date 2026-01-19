@@ -1,0 +1,54 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------< com.portfolio:crypto-backend >--------------------
+[INFO] Building crypto-backend 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.4.0:clean (default-clean) @ crypto-backend ---
+[INFO] Deleting C:\Users\aksha\OneDrive\Desktop\Crypto_Portfolio\Crypto_Backend\target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ crypto-backend ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ crypto-backend ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 26 source files with javac [debug parameters release 17] to target\classes
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /C:/Users/aksha/OneDrive/Desktop/Crypto_Portfolio/Crypto_Backend/src/main/java/com/portfolio/backend/controller/ManualController.java:[27,35] cannot find symbol
+  symbol:   method getUserIdFromJwtToken(java.lang.String)
+  location: variable jwtUtils of type com.portfolio.backend.security.JwtUtils
+[ERROR] /C:/Users/aksha/OneDrive/Desktop/Crypto_Portfolio/Crypto_Backend/src/main/java/com/portfolio/backend/controller/ManualController.java:[66,31] cannot find symbol
+  symbol:   method getUserIdFromJwtToken(java.lang.String)
+  location: variable jwtUtils of type com.portfolio.backend.security.JwtUtils
+[ERROR] /C:/Users/aksha/OneDrive/Desktop/Crypto_Portfolio/Crypto_Backend/src/main/java/com/portfolio/backend/controller/ManualController.java:[72,31] cannot find symbol
+  symbol:   method getUserIdFromJwtToken(java.lang.String)
+  location: variable jwtUtils of type com.portfolio.backend.security.JwtUtils
+[INFO] 3 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  5.196 s
+[INFO] Finished at: 2026-01-02T22:37:36+05:30
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.13.0:compile (default-compile) on project crypto-backend: Compilation failure: Compilation failure: 
+[ERROR] /C:/Users/aksha/OneDrive/Desktop/Crypto_Portfolio/Crypto_Backend/src/main/java/com/portfolio/backend/controller/ManualController.java:[27,35] cannot find symbol
+[ERROR]   symbol:   method getUserIdFromJwtToken(java.lang.String)
+[ERROR]   location: variable jwtUtils of type com.portfolio.backend.security.JwtUtils
+[ERROR] /C:/Users/aksha/OneDrive/Desktop/Crypto_Portfolio/Crypto_Backend/src/main/java/com/portfolio/backend/controller/ManualController.java:[66,31] cannot find symbol
+[ERROR]   symbol:   method getUserIdFromJwtToken(java.lang.String)
+[ERROR]   location: variable jwtUtils of type com.portfolio.backend.security.JwtUtils
+[ERROR] /C:/Users/aksha/OneDrive/Desktop/Crypto_Portfolio/Crypto_Backend/src/main/java/com/portfolio/backend/controller/ManualController.java:[72,31] cannot find symbol
+[ERROR]   symbol:   method getUserIdFromJwtToken(java.lang.String)
+[ERROR]   location: variable jwtUtils of type com.portfolio.backend.security.JwtUtils
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
