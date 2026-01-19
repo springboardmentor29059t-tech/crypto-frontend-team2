@@ -2,3 +2,5 @@ node_modules/
 .env
 dist/
 .vscode/
+# Backend build files
+Crypto_Backend/target/
