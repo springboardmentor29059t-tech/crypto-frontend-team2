@@ -4,3 +4,21 @@ dist/
 .vscode/
 # Backend build files
 Crypto_Backend/target/
+
+# Backend build artifacts
+Crypto_Backend/target/
+
+# Frontend build artifacts
+Crypto_Frontend/node_modules/
+Crypto_Frontend/dist/
+
+# General
+node_modules/
+dist/
+
+# Backend build artifacts
+Crypto_Backend/target/
+
+# Frontend build artifacts
+Crypto_Frontend/node_modules/
+Crypto_Frontend/dist/
