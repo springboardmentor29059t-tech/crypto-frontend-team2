@@ -1,0 +1,84 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+/* Custom project colors and design tokens for Tailwind v4 */
+@theme {
+  --color-dark-bg: #0B0E14; /* ✅ Updated to 'Void Black' for the new Sidebar */
+  --color-card-bg: #0f172a;
+  --color-accent-blue: #3b82f6;
+  --color-crypto-green: #10b981;
+  --color-crypto-red: #ef4444;
+
+  --color-border-slate: #1e293b;
+
+  /* ✅ Set Space Grotesk as the primary font */
+  --font-sans: 'Space Grotesk', 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Base Styles */
+@layer base {
+  body {
+    background-color: var(--color-dark-bg);
+    color: #f1f5f9;
+    margin: 0;
+    font-family: var(--font-sans); /* Applies Space Grotesk globally */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Global Utilities */
+@layer utilities {
+  /* Premium Slim Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px; /* Made slightly thinner for elegance */
+    height: 5px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 10px;
+    border: 1px solid var(--color-dark-bg); /* Adds a nice gap */
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #3b82f6; /* Blue hover for better feedback */
+  }
+
+  /* Privacy Blur Effect */
+  .privacy-blur {
+    filter: blur(8px);
+    user-select: none;
+    pointer-events: none;
+    transition: filter 0.3s ease;
+  }
+
+  /* ✅ Enhanced Glassmorphism Effect */
+  .glass-panel {
+    background: rgba(11, 14, 20, 0.7); /* Darker base */
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Tracking utilities */
+  .tracking-extrawide {
+    letter-spacing: 0.15em;
+  }
+}
+
+/* Animation Utilities */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms; /* Slightly slower for 'premium' feel */
+}
