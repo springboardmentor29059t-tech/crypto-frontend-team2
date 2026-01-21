@@ -63,11 +63,11 @@ public class PriceAlertService {
 
             boolean triggered = false;
             
-            if ("ABOVE".equals(alert.getCondition())) {
+            if ("ABOVE".equals(alert.getAlertCondition())) {
                 if (currentPrice >= alert.getTargetPrice()) {
                     triggered = true;
                 }
-            } else if ("BELOW".equals(alert.getCondition())) {
+            } else if ("BELOW".equals(alert.getAlertCondition())) {
                 if (currentPrice <= alert.getTargetPrice()) {
                     triggered = true;
                 }
@@ -75,7 +75,7 @@ public class PriceAlertService {
 
             if (triggered) {
                 // Trigger Notification
-                String msg = alert.getSymbol() + " has reached " + currentPrice + " (Target: " + alert.getCondition() + " " + alert.getTargetPrice() + ")";
+                String msg = alert.getSymbol() + " has reached " + currentPrice + " (Target: " + alert.getAlertCondition() + " " + alert.getTargetPrice() + ")";
                 notificationService.createNotification(alert.getUser().getId(), "ALERT", msg);
 
                 // Deactivate Alert to prevent spam

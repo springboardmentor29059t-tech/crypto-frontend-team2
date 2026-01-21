@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class ExchangeService {
@@ -186,12 +187,25 @@ public class ExchangeService {
         try {
             String[] majorPairs = {"BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT"};
             
-            List<Map<String, Object>> allTrades = new ArrayList<>();
+            List<CompletableFuture<List<Map<String, Object>>>> futures = new ArrayList<>();
             for (String symbol : majorPairs) {
-                // Ensure type compatibility explicitly
-                List<Map<String, Object>> trades = binanceService.getMyTrades(symbol, apiKey.trim(), apiSecret.trim());
-                allTrades.addAll(trades);
+                String finalApiKey = apiKey;
+                String finalApiSecret = apiSecret;
+                futures.add(CompletableFuture.supplyAsync(() -> {
+                    try {
+                        return binanceService.getMyTrades(symbol, finalApiKey.trim(), finalApiSecret.trim());
+                    } catch (Exception e) {
+                        System.err.println("Failed to fetch trades for " + symbol + ": " + e.getMessage());
+                        return new ArrayList<>();
+                    }
+                }));
             }
+
+            List<Map<String, Object>> allTrades = futures.stream()
+                .map(CompletableFuture::join)
+                .flatMap(List::stream)
+                .collect(java.util.stream.Collectors.toList());
+
             // Sort
             allTrades.sort((t1, t2) -> Long.compare((Long)t2.get("time"), (Long)t1.get("time")));
             

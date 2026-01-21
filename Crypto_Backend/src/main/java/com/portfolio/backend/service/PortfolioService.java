@@ -14,6 +14,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Service
 public class PortfolioService {
@@ -107,7 +110,19 @@ public class PortfolioService {
         return result;
     }
 
+    // Cache for heavy transaction fetching (TTL: 5 minutes)
+    private Map<Long, List<UnifiedTransaction>> transactionCache = new ConcurrentHashMap<>();
+    private Map<Long, Long> transactionCacheTime = new ConcurrentHashMap<>();
+
     private List<UnifiedTransaction> getAllUnifiedTransactions(Long userId) {
+        // Check Cache (5 minutes)
+        if (transactionCache.containsKey(userId) && transactionCacheTime.containsKey(userId)) {
+            long lastTime = transactionCacheTime.get(userId);
+            if (System.currentTimeMillis() - lastTime < 300000) { // 5 minutes
+                 return new ArrayList<>(transactionCache.get(userId));
+            }
+        }
+
         List<UnifiedTransaction> allTxs = new ArrayList<>();
 
         // A. Manual Transactions
@@ -127,45 +142,87 @@ public class PortfolioService {
 
         // B. Exchange Transactions
         var keys = exchangeService.getUserApiKeys(userId);
-        for (var key : keys) {
-            try {
-                List<Map<String, Object>> trades = exchangeService.getTrades(key.getExchange().getName(), userId);
-                for (Map<String, Object> trade : trades) {
-                    String fullSymbol = (String) trade.get("symbol");
-                    String symbol = fullSymbol.replace("USDT", "");
-                    double price = ((Number) trade.get("price")).doubleValue();
-                    double qty = ((Number) trade.get("qty")).doubleValue();
-                    boolean isBuyer = (boolean) trade.get("isBuyer");
-                    long time = ((Number) trade.get("time")).longValue();
-                    String tradeId = String.valueOf(trade.get("id"));
+        
+        List<CompletableFuture<List<UnifiedTransaction>>> futures = keys.stream()
+            .map(key -> CompletableFuture.supplyAsync(() -> {
+                List<UnifiedTransaction> keyTxs = new ArrayList<>();
+                try {
+                    List<Map<String, Object>> trades = exchangeService.getTrades(key.getExchange().getName(), userId);
+                    for (Map<String, Object> trade : trades) {
+                        String fullSymbol = (String) trade.get("symbol");
+                        String symbol = fullSymbol.replace("USDT", "");
+                        double price = ((Number) trade.get("price")).doubleValue();
+                        double qty = ((Number) trade.get("qty")).doubleValue();
+                        boolean isBuyer = (boolean) trade.get("isBuyer");
+                        long time = ((Number) trade.get("time")).longValue();
+                        String tradeId = String.valueOf(trade.get("id"));
 
-                    allTxs.add(new UnifiedTransaction(
-                        symbol,
-                        isBuyer ? "BUY" : "SELL",
-                        qty,
-                        price,
-                        time,
-                        "exchange",
-                        tradeId
-                    ));
+                        keyTxs.add(new UnifiedTransaction(
+                            symbol,
+                            isBuyer ? "BUY" : "SELL",
+                            qty,
+                            price,
+                            time,
+                            "exchange",
+                            tradeId
+                        ));
+                    }
+                } catch (Exception e) {
+                    System.err.println("Failed to fetch trades for user " + userId + ": " + e.getMessage());
                 }
-            } catch (Exception e) {
-                System.err.println("Failed to fetch trades for user " + userId + ": " + e.getMessage());
-            }
-        }
+                return keyTxs;
+            }))
+            .collect(Collectors.toList());
+
+        futures.stream()
+               .map(CompletableFuture::join)
+               .forEach(allTxs::addAll);
+        
+        // Update Cache
+        transactionCache.put(userId, allTxs);
+        transactionCacheTime.put(userId, System.currentTimeMillis());
+
         return allTxs;
     }
 
+    // Cache for summary calculation (TTL: 60 seconds)
+    private Map<Long, List<Map<String, Object>>> summaryCache = new ConcurrentHashMap<>();
+    private Map<Long, Long> summaryCacheTime = new ConcurrentHashMap<>();
+
     public List<Map<String, Object>> getPortfolioSummary(Long userId) throws Exception {
+        // Check Cache (60 seconds) - extremely fast for tab switching
+        if (summaryCache.containsKey(userId) && summaryCacheTime.containsKey(userId)) {
+             long lastTime = summaryCacheTime.get(userId);
+             if (System.currentTimeMillis() - lastTime < 60000) {
+                 return new ArrayList<>(summaryCache.get(userId));
+             }
+        }
+
         Map<String, AssetStats> statsMap = new HashMap<>();
         
-        // 1. Fetch All Transactions (Manual + Exchange)
-        List<UnifiedTransaction> allTxs = getAllUnifiedTransactions(userId);
+        // 1. Fetch Transactions (Async)
+        CompletableFuture<List<UnifiedTransaction>> txFuture = CompletableFuture.supplyAsync(() -> getAllUnifiedTransactions(userId));
 
-        // 2. Sort Chronologically (Ascending for Cost Basis)
+        // 2. Fetch Prices (Async)
+        CompletableFuture<Map<String, Double>> priceFuture = CompletableFuture.supplyAsync(() -> priceService.getPrices(null));
+
+        // 3. Fetch Exchange Balances (Async Parallel)
+        var keys = exchangeService.getUserApiKeys(userId);
+        List<CompletableFuture<Map<String, Double>>> balanceFutures = keys.stream()
+            .map(key -> CompletableFuture.supplyAsync(() -> {
+                try {
+                    return exchangeService.getBalances(userId, key.getExchange().getName());
+                } catch (Exception e) {
+                    return new HashMap<String, Double>();
+                }
+            }))
+            .collect(Collectors.toList());
+
+        // --- Wait & Process Transactions for Cost Basis ---
+        List<UnifiedTransaction> allTxs = txFuture.join();
+        // Sort Chronologically (Ascending)
         allTxs.sort((t1, t2) -> Long.compare(t1.timestamp, t2.timestamp));
 
-        // 3. Process Sorted Transactions for Cost Basis
         for (UnifiedTransaction tx : allTxs) {
             statsMap.putIfAbsent(tx.symbol, new AssetStats());
             AssetStats stats = statsMap.get(tx.symbol);
@@ -183,7 +240,6 @@ public class PortfolioService {
                 stats.currentBalance += tx.amount;
 
             } else if ("SELL".equalsIgnoreCase(tx.type) || "WITHDRAW".equalsIgnoreCase(tx.type)) {
-                // Calculate Realized PnL
                 if (stats.avgBuyPrice > 0) {
                      double gain = (tx.price - stats.avgBuyPrice) * tx.amount;
                      stats.realizedPnL += gain;
@@ -194,33 +250,27 @@ public class PortfolioService {
             }
         }
 
-        // 4. Reconcile with Real Balances
-        var keys = exchangeService.getUserApiKeys(userId);
-        Map<String, Double> prices = priceService.getPrices(null);
+        // --- Aggregate Real Balances ---
         Map<String, Double> realBalances = new HashMap<>();
-
-        try {
-            for (var key : keys) {
-                try {
-                    Map<String, Double> b = exchangeService.getBalances(userId, key.getExchange().getName());
-                    b.forEach((k, v) -> realBalances.merge(k, v, Double::sum));
-                } catch (Exception e) {}
-            }
-        } catch (Exception e) {}
         
-        // Manual Balances
-        var manualTxs = manualService.getUserTransactions(userId); // Fetch again or filter? Fetch again is safer/easier
-        for (var tx : manualTxs) {
-             String symbol = tx.getSymbol().toUpperCase();
-             double amount = tx.getAmount().doubleValue();
-             if ("BUY".equals(tx.getType().name()) || "DEPOSIT".equals(tx.getType().name())) {
-                 realBalances.merge(symbol, amount, Double::sum);
-             } else {
-                 realBalances.merge(symbol, -amount, Double::sum);
-             }
+        // Exchange Balances
+        balanceFutures.stream()
+            .map(CompletableFuture::join)
+            .forEach(map -> map.forEach((k, v) -> realBalances.merge(k, v, Double::sum)));
+        
+        // Manual Balances (derived from transactions)
+        for (UnifiedTransaction tx : allTxs) {
+            if ("manual".equals(tx.source)) {
+                 if ("BUY".equalsIgnoreCase(tx.type) || "DEPOSIT".equalsIgnoreCase(tx.type)) {
+                     realBalances.merge(tx.symbol, tx.amount, Double::sum);
+                 } else {
+                     realBalances.merge(tx.symbol, -tx.amount, Double::sum);
+                 }
+            }
         }
 
-        // 5. Final Result
+        // --- Final Result ---
+        Map<String, Double> prices = priceFuture.join();
         List<Map<String, Object>> result = new ArrayList<>();
         
         for (Map.Entry<String, Double> entry : realBalances.entrySet()) {
@@ -254,13 +304,15 @@ public class PortfolioService {
                 
                 result.add(item);
                 
-                // Add explicit Realized/Unrealized PnL
                 item.put("realizedPnL", stats.realizedPnL);
-                item.put("unrealizedPnL", pnl); // Existing PnL based on current balance is essentially unrealized
-                // Total PnL = Realized + Unrealized
+                item.put("unrealizedPnL", pnl);
                 item.put("totalPnL", stats.realizedPnL + pnl);
             }
         }
+        
+        // Update Cache
+        summaryCache.put(userId, result);
+        summaryCacheTime.put(userId, System.currentTimeMillis());
         
         return result;
     }

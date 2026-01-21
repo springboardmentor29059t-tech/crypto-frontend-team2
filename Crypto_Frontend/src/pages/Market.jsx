@@ -136,6 +136,12 @@ const Market = () => {
                                         <td className="p-5"><Skeleton className="h-8 w-32 mx-auto rounded bg-slate-800" /></td>
                                     </tr>
                                 ))
+                            ) : coins.length === 0 ? (
+                                <tr>
+                                    <td colSpan="6" className="text-center text-slate-500 py-12 text-lg">
+                                        Unable to load market data. Please try again later.
+                                    </td>
+                                </tr>
                             ) : (
                                 coins.map((coin, idx) => (
                                     <tr
@@ -163,22 +169,32 @@ const Market = () => {
                                                 {Math.abs(coin.price_change_percentage_24h).toFixed(2)}%
                                             </div>
                                         </td>
-                                        <td className="p-5 text-right text-slate-400 font-medium">₹{(coin.market_cap / 1e9).toFixed(2)}B</td>
+                                        <td className="p-5 text-right text-slate-400 font-medium">
+                                            {/* Auto-format Market Cap (Trillions/Billions) */}
+                                            {coin.market_cap > 1e12
+                                                ? `₹${(coin.market_cap / 1e12).toFixed(2)}T`
+                                                : `₹${(coin.market_cap / 1e9).toFixed(2)}B`
+                                            }
+                                        </td>
                                         <td className="p-5 w-48">
                                             <div className="h-12 w-32 mx-auto filter group-hover:brightness-110 transition-all">
-                                                <ResponsiveContainer width="100%" height="100%">
-                                                    <AreaChart data={coin.sparkline.map((p, i) => ({ i, p }))}>
-                                                        <Area
-                                                            type="monotone"
-                                                            dataKey="p"
-                                                            stroke={coin.price_change_percentage_24h >= 0 ? '#34d399' : '#fb7185'}
-                                                            strokeWidth={2}
-                                                            fillOpacity={0.1}
-                                                            fill={coin.price_change_percentage_24h >= 0 ? '#34d399' : '#fb7185'}
-                                                            isAnimationActive={false}
-                                                        />
-                                                    </AreaChart>
-                                                </ResponsiveContainer>
+                                                {coin.sparkline && coin.sparkline.length > 0 ? (
+                                                    <ResponsiveContainer width="100%" height="100%">
+                                                        <AreaChart data={coin.sparkline.map((p, i) => ({ i, p }))}>
+                                                            <Area
+                                                                type="monotone"
+                                                                dataKey="p"
+                                                                stroke={coin.price_change_percentage_24h >= 0 ? '#34d399' : '#fb7185'}
+                                                                strokeWidth={2}
+                                                                fillOpacity={0.1}
+                                                                fill={coin.price_change_percentage_24h >= 0 ? '#34d399' : '#fb7185'}
+                                                                isAnimationActive={false}
+                                                            />
+                                                        </AreaChart>
+                                                    </ResponsiveContainer>
+                                                ) : (
+                                                    <div className="h-full w-full flex items-center justify-center text-xs text-slate-600">No Data</div>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -279,7 +295,7 @@ const Market = () => {
                         <div className="h-[450px] w-full bg-black/20 rounded-2xl p-6 border border-white/5 relative">
                             {chartLoading ? (
                                 <Skeleton className="w-full h-full rounded-xl bg-slate-800/50" />
-                            ) : (
+                            ) : chartData && chartData.length > 0 ? (
                                 <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart data={chartData}>
                                         <defs>
@@ -317,6 +333,13 @@ const Market = () => {
                                         />
                                     </AreaChart>
                                 </ResponsiveContainer>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center h-full text-slate-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                                    </svg>
+                                    <p>No chart data available for this timeframe</p>
+                                </div>
                             )}
                         </div>
                     </div>

@@ -22,8 +22,8 @@ public class PriceAlert {
     @Column(nullable = false)
     private Double targetPrice;
 
-    @Column(nullable = false)
-    private String condition; // ABOVE, BELOW
+    @Column(nullable = false, name = "alert_condition")
+    private String alertCondition; // ABOVE, BELOW
 
     @Column(nullable = false)
     private boolean isActive = true;
@@ -33,11 +33,11 @@ public class PriceAlert {
     
     public PriceAlert() {}
 
-    public PriceAlert(User user, String symbol, Double targetPrice, String condition) {
+    public PriceAlert(User user, String symbol, Double targetPrice, String alertCondition) {
         this.user = user;
         this.symbol = symbol;
         this.targetPrice = targetPrice;
-        this.condition = condition;
+        this.alertCondition = alertCondition;
         this.createdAt = LocalDateTime.now();
         this.isActive = true;
     }
@@ -55,8 +55,8 @@ public class PriceAlert {
     public Double getTargetPrice() { return targetPrice; }
     public void setTargetPrice(Double targetPrice) { this.targetPrice = targetPrice; }
 
-    public String getCondition() { return condition; }
-    public void setCondition(String condition) { this.condition = condition; }
+    public String getAlertCondition() { return alertCondition; }
+    public void setAlertCondition(String alertCondition) { this.alertCondition = alertCondition; }
 
     public boolean isActive() { return isActive; }
     public void setActive(boolean active) { isActive = active; }
