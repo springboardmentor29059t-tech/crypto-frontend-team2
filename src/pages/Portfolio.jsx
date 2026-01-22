@@ -311,7 +311,7 @@ const Portfolio = () => {
              </div>
 
              <div className="space-y-2">
-                {holdings.slice(0, 3).map(h => {
+                {holdings.slice(0, 5).map(h => {
                     const id = h.assetId ? h.assetId.toLowerCase() : '';
                     const val = (parseFloat(h.quantity) * (marketData[id]?.price || 0));
                     const density = stats.totalValue > 0 ? ((val / stats.totalValue) * 100) : 0;
