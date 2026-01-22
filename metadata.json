@@ -1,0 +1,8 @@
+
+{
+  "name": "Crypto Portfolio Tracker",
+  "description": "A professional-grade crypto portfolio tracking application with real-time P&L analysis, historical charts, and AI-powered risk/scam detection.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
